@@ -1,0 +1,9 @@
+# $Id$
+CHANGES
+HISTORY
+MANIFEST
+META.yml
+Makefile.PL
+README
+lib/CDDB.pm
+t/01_cddb.t

@@ -1,0 +1,72 @@
+$Id$
+
+-----
+ABOUT
+-----
+
+CDDB is a high-level interface to databases based on the Compact Disc
+Database protocol.
+
+Starting in version 1.04, CDDB.pm will contact freedb.org servers by
+default.  This change is in response to Gracenote denying CDDB.pm
+connections and failing to answer my e-mail.
+
+cddb.com's developer license is for end-user applications; not
+third-party libraries.  This makes CDDB.pm ineligible for access to
+cddb.com servers.  This author will not pursue further cddb.com
+access.
+
+Developers using CDDB.pm may continue to attempt connections to
+cddb.com servers, but there are no guarantees it will work.
+
+-------------
+COMPATIBILITY
+-------------
+
+CDDB.pm uses standard Perl modules.  It has been tested on OS/2, MacOS
+and FreeBSD systems, as well as the systems listed at:
+
+	http://testers.cpan.org/search?request=dist&dist=CDDB
+
+If you want to submit disc information to the CDDB, you will need to
+install two other modules:
+
+	Mail::Internet will allow CDDB.pm to send email submissions, and it
+	automagically includes Mail::Header.
+
+	MIME::QuotedPrint will allow CDDB.pm to send non-ASCII text
+	unscathed.  Currently only ISO-8859-1 and ASCII are supported.
+
+All other features will work without these modules.
+
+---------------
+GETTING STARTED
+---------------
+
+To build and test this distribution, type:
+
+	perl Makefile.PL
+	make test
+
+The final test will try to send a sample submission to the CDDB if
+MailTools is present.  It expects to find an SMTP host in the SMTPHOST
+environment variable.  It will fall back to "mail" if SMTPHOST doesn't
+exist.  If neither works, the test will be skipped.  To see why it's
+skipped:
+
+	make test TEST_VERBOSE=1
+
+Some of the tests (most notably numbers 25, 27 and 29) compare data
+returned by a cddbp server against a stored copy of a previous query.
+These tests fail occasionally since the database is constantly in
+flux.  Starting with version 1.00, the test program uses fuzzy
+comparisons that should fail less.  Version 1.04 saw even fuzzier
+comparisons.  Please let me know if there are any problems.
+
+If you're satisfied with the test results:
+
+	make install
+
+Thanks for reading!
+
+-- Rocco Caputo / rcaputo@cpan.org
