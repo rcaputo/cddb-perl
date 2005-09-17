@@ -2,7 +2,6 @@
 CHANGES
 HISTORY
 MANIFEST
-META.yml
 Makefile.PL
 README
 lib/CDDB.pm
