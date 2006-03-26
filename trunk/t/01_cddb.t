@@ -139,15 +139,18 @@ else {
 ### test looking up discs (one match)
 
 my @discs = $cddb->get_discs($id, $track_offsets, $total_seconds);
+my $disc_count = @discs;
 
-(@discs == 1) || print 'not '; print "ok 13\n";
+my ($genre, $disc_id, $title) = @{$discs[0]};
+($disc_count == 2) || print 'not '; print "ok 13 # $disc_count\n";
 
-my ($genre, $cddb_id, $title) = @{$discs[0]};
-($genre   eq 'misc')      || print 'not '; print "ok 14\n";
-($cddb_id eq '03015501')  || print 'not '; print "ok 15\n";
+print "not " unless grep { $_->[0] eq "misc" } @discs;
+print "ok 14\n";
 
-print 'not ' unless $title =~ / freedb disc ID test/i;
-print "ok 16 # $title\n";
+($discs[0][1] eq '03015501')  || print 'not '; print "ok 15 # $discs[0][1]\n";
+
+print 'not ' unless $discs[0][2] =~ /freedb.*test/i;
+print "ok 16 # $discs[0][2]\n";
 
 ### test macro lookup
 
@@ -155,7 +158,8 @@ $cddb->disconnect();
 my @other_discs = $cddb->get_discs_by_toc(@toc);
 
 if (@other_discs) {
-	(@other_discs == 1) || print 'not '; print "ok 17\n";
+	my $other_count = @other_discs;
+	($other_count == 2) || print 'not '; print "ok 17 # $other_count\n";
 	($other_discs[0]->[0] eq $discs[0]->[0]) || print 'not '; print "ok 18\n";
 	($other_discs[0]->[1] eq $discs[0]->[1]) || print 'not '; print "ok 19\n";
 	($other_discs[0]->[2] eq $discs[0]->[2]) || print 'not '; print "ok 20\n";
@@ -169,7 +173,7 @@ else {
 ### test gathering disc details
 
 $cddb->disconnect();
-my $disc_info = $cddb->get_disc_details($genre, $cddb_id);
+my $disc_info = $cddb->get_disc_details($genre, $disc_id);
 
 # -><- uncomment if you'd like to see all the details
 # foreach my $key (sort keys(%$disc_info)) {
@@ -185,7 +189,7 @@ my $disc_info = $cddb->get_disc_details($genre, $cddb_id);
 ($disc_info->{'disc length'} eq '344 seconds') || print 'not ';
 print "ok 21 # $disc_info->{'disc length'}\n";
 
-($disc_info->{'discid'} eq $cddb_id) || print 'not ';
+($disc_info->{'discid'} eq $disc_id) || print 'not ';
 print "ok 22\n";
 
 ($disc_info->{'dtitle'} eq $title) || print 'not ';
@@ -204,7 +208,7 @@ else {
 	print "not ok 25\n";
 }
 
-my @test_titles = ( "5:40:00" );
+my @test_titles = ( "01-test" );
 
 my $ok_tracks = 0;
 $i = 0; $result = 'ok';
@@ -230,9 +234,9 @@ my @fuzzy_offsets = qw(
 @discs = $cddb->get_discs($id, \@fuzzy_offsets, $total_seconds);
 @discs || print 'not '; print "ok 27\n";
 
-($genre, $cddb_id, $title) = @{$discs[0]};
+($genre, $disc_id, $title) = @{$discs[0]};
 (length $genre)         || print 'not '; print "ok 28\n";
-(length($cddb_id) == 8) || print 'not '; print "ok 29\n";
+(length($disc_id) == 8) || print 'not '; print "ok 29\n";
 (length $title)         || print 'not '; print "ok 30\n";
 
 $id = 'c509b810';

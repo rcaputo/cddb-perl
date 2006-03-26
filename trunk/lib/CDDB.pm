@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.16';
+$VERSION = '1.17';
 
 BEGIN {
 	if ($^O eq 'MSWin32') {
