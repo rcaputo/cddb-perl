@@ -10,6 +10,7 @@ WriteMakefile(
 	NAME         => 'CDDB',
 	AUTHOR       => 'Rocco Caputo <rcaputo@cpan.org>',
 	ABSTRACT     => 'High-level interface to CDDB and freedb servers.',
+	LICENSE      => 'perl',
 	VERSION_FROM => 'lib/CDDB.pm',
 	dist         => {
 		COMPRESS   => 'gzip -9',
