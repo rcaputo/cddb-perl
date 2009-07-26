@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.17';
+$VERSION = '1.20';
 
 BEGIN {
 	if ($^O eq 'MSWin32') {
@@ -516,7 +516,7 @@ sub calculate_id {
 
 	foreach my $line (@toc) {
 		my ($track, $mm_begin, $ss_begin, $ff_begin) = split(/\s+/, $line, 4);
-		my $frame_offset = (($mm_begin * 60 + $ss_begin) * 75) + $ff_begin + 150;
+		my $frame_offset = (($mm_begin * 60 + $ss_begin) * 75) + $ff_begin;
 		my $seconds_begin = int($frame_offset / 75);
 
 		if (defined $seconds_previous) {
@@ -550,10 +550,10 @@ sub calculate_id {
 
 	# Calculate the ID.  Whee!
 	my $id = sprintf(
-		"%08x",
-		(($cddbp_sum % 255) << 24)
-		| (($seconds_last - $seconds_first) << 8)
-		| scalar(@track_offsets)
+		"%02x%04x%02x",
+		($cddbp_sum % 255),
+		$seconds_last - $seconds_first,
+		 scalar(@track_offsets)
 	);
 
 	# In list context, we return several things.  Some of them are
@@ -1022,67 +1022,67 @@ CDDB.pm - a high-level interface to cddb protocol servers (freedb and CDDB)
 
 =head1 SYNOPSIS
 
-	use CDDB;
+  use CDDB;
 
-	### Connect to the cddbp server.
-	my $cddbp = new CDDB(
-		Host  => 'freedb.freedb.org', # default
-		Port  => 8880,                # default
-		Login => $login_id,           # defaults to %ENV's
-	) or die $!;
+  ### Connect to the cddbp server.
+  my $cddbp = new CDDB(
+    Host  => 'freedb.freedb.org', # default
+    Port  => 8880,                # default
+    Login => $login_id,           # defaults to %ENV's
+  ) or die $!;
 
-	### Retrieve known genres.
-	my @genres = $cddbp->get_genres();
+  ### Retrieve known genres.
+  my @genres = $cddbp->get_genres();
 
-	### Calculate cddbp ID based on MSF info.
-	my @toc = (
-		'1    0  2 37',           # track, CD-i MSF (space-delimited)
-		'999  1 38 17',           # lead-out track MSF
-		'1000 0  0 Error!',       # error track (don't include if ok)
-	);
-	my (
-		$cddbp_id,      # used for further cddbp queries
-		$track_numbers, # padded with 0's (for convenience)
-		$track_lengths, # length of each track, in MM:SS format
-		$track_offsets, # absolute offsets (used for further cddbp queries)
-		$total_seconds  # total play time, in seconds (for cddbp queries)
-	 ) = $cddbp->calculate_id(@toc);
+  ### Calculate cddbp ID based on MSF info.
+  my @toc = (
+    '1    0  2 37',           # track, CD-i MSF (space-delimited)
+    '999  1 38 17',           # lead-out track MSF
+    '1000 0  0 Error!',       # error track (don't include if ok)
+  );
+  my (
+    $cddbp_id,      # used for further cddbp queries
+    $track_numbers, # padded with 0's (for convenience)
+    $track_lengths, # length of each track, in MM:SS format
+    $track_offsets, # absolute offsets (used for further cddbp queries)
+    $total_seconds  # total play time, in seconds (for cddbp queries)
+   ) = $cddbp->calculate_id(@toc);
 
-	### Query discs based on cddbp ID and other information.
-	my @discs = $cddbp->get_discs($cddbp_id, $track_offsets, $total_seconds);
-	foreach my $disc (@discs) {
-		my ($genre, $cddbp_id, $title) = @$disc;
-	}
+  ### Query discs based on cddbp ID and other information.
+  my @discs = $cddbp->get_discs($cddbp_id, $track_offsets, $total_seconds);
+  foreach my $disc (@discs) {
+    my ($genre, $cddbp_id, $title) = @$disc;
+  }
 
-	### Query disc details (usually done with get_discs() information).
-	my $disc_info     = $cddbp->get_disc_details($genre, $cddbp_id);
-	my $disc_time     = $disc_info->{'disc length'};
-	my $disc_id       = $disc_info->{discid};
-	my $disc_title    = $disc_info->{dtitle};
-	my @track_offsets = @{$disc_info->{offsets}};
-	my @track_seconds = @{$disc_info->{seconds}};
-	my @track_titles  = @{$disc_info->{ttitles}};
-	# other information may be returned... explore!
+  ### Query disc details (usually done with get_discs() information).
+  my $disc_info     = $cddbp->get_disc_details($genre, $cddbp_id);
+  my $disc_time     = $disc_info->{'disc length'};
+  my $disc_id       = $disc_info->{discid};
+  my $disc_title    = $disc_info->{dtitle};
+  my @track_offsets = @{$disc_info->{offsets}};
+  my @track_seconds = @{$disc_info->{seconds}};
+  my @track_titles  = @{$disc_info->{ttitles}};
+  # other information may be returned... explore!
 
-	### Submit a disc via e-mail. (Requires MailTools)
+  ### Submit a disc via e-mail. (Requires MailTools)
 
-	die "can't submit a disc (no mail modules; see README)"
-		unless $cddbp->can_submit_disc();
+  die "can't submit a disc (no mail modules; see README)"
+    unless $cddbp->can_submit_disc();
 
-	# These are useful for prompting the user to fix defaults:
-	print "I will send mail through: ", $cddbp->get_mail_host(), "\n";
-	print "I assume your e-mail address is: ", $cddbp->get_mail_address(), "\n";
+  # These are useful for prompting the user to fix defaults:
+  print "I will send mail through: ", $cddbp->get_mail_host(), "\n";
+  print "I assume your e-mail address is: ", $cddbp->get_mail_address(), "\n";
 
-	# Actually submit a disc record.
-	$cddbp->submit_disc(
-		Genre       => 'classical',
-		Id          => 'b811a20c',
-		Artist      => 'Various',
-		DiscTitle   => 'Cartoon Classics',
-		Offsets     => $disc_info->{offsets},   # array reference
-		TrackTitles => $disc_info->{ttitles},   # array reference
-		From        => 'login@host.domain.etc', # will try to determine
-	);
+  # Actually submit a disc record.
+  $cddbp->submit_disc(
+    Genre       => 'classical',
+    Id          => 'b811a20c',
+    Artist      => 'Various',
+    DiscTitle   => 'Cartoon Classics',
+    Offsets     => $disc_info->{offsets},   # array reference
+    TrackTitles => $disc_info->{ttitles},   # array reference
+    From        => 'login@host.domain.etc', # will try to determine
+  );
 
 =head1 DESCRIPTION
 
@@ -1227,21 +1227,21 @@ Track 1000 should not be present if everything is okay:
 In scalar context, calculate_id() returns just the cddbp ID.  In a
 list context, it returns an array containing the following values:
 
-	(
-		$cddbp_id,
-		$track_numbers,
-		$track_lengths,
-		$track_offsets,
-		$total_seconds
-	) = $cddbp->calculate_id(@toc);
+  (
+    $cddbp_id,
+    $track_numbers,
+    $track_lengths,
+    $track_offsets,
+    $total_seconds
+  ) = $cddbp->calculate_id(@toc);
 
-	print(
-		"cddbp ID      = $cddbp_id\n",        # b811a20c
-		"track numbers = @$track_numbers\n",  # 001 002 003 ...
-		"track lengths = @$track_lengths\n",  # 01:36 10:19 04:29 ...
-		"track offsets = @$track_offsets\n",  # 187 7367 53805 ...
-		"total seconds = $total_seconds\n",   # 4514
-	);
+  print(
+    "cddbp ID      = $cddbp_id\n",        # b811a20c
+    "track numbers = @$track_numbers\n",  # 001 002 003 ...
+    "track lengths = @$track_lengths\n",  # 01:36 10:19 04:29 ...
+    "track offsets = @$track_offsets\n",  # 187 7367 53805 ...
+    "total seconds = $total_seconds\n",   # 4514
+  );
 
 CDDBP_ID
 
@@ -1279,24 +1279,24 @@ get_discs() asks the cddbp server for a summary of all the CDs
 matching a given cddbp ID, track offsets, and total playing time.
 These values can be retrieved from calculade_id().
 
-	my @id_info       = $cddbp->calculate_id(@toc);
-	my $cddbp_id      = $id_info->[0];
-	my $track_offsets = $id_info->[3];
-	my $total_seconds = $id_info->[4];
+  my @id_info       = $cddbp->calculate_id(@toc);
+  my $cddbp_id      = $id_info->[0];
+  my $track_offsets = $id_info->[3];
+  my $total_seconds = $id_info->[4];
 
 get_discs() returns an array of matching discs, each of which is
 represented by an array reference.  It returns an empty array if the
 query succeeded but did not match, and it returns undef on error.
 
-	my @discs = $cddbp->get_discs( $cddbp_id, $track_offsets, $total_seconds );
-	foreach my $disc (@discs) {
-		my ($disc_genre, $disc_id, $disc_title) = @$disc;
-		print(
-			"disc id    = $disc_id\n",
-			"disc genre = $disc_genre\n",
-			"disc title = $disc_title\n",
-		);
-	}
+  my @discs = $cddbp->get_discs( $cddbp_id, $track_offsets, $total_seconds );
+  foreach my $disc (@discs) {
+    my ($disc_genre, $disc_id, $disc_title) = @$disc;
+    print(
+      "disc id    = $disc_id\n",
+      "disc genre = $disc_genre\n",
+      "disc title = $disc_title\n",
+    );
+  }
 
 DISC_GENRE is the genre this disc falls into, as determined by whoever
 submitted or last edited the disc.  The genre is required when
@@ -1325,7 +1325,7 @@ way to use that.
 
 Cddb protocol query strings look like:
 
-	cddb query $cddbp_id $track_count @offsets $total_seconds
+  cddb query $cddbp_id $track_count @offsets $total_seconds
 
 =item get_disc_details DISC_GENRE, CDDBP_ID
 
@@ -1337,7 +1337,7 @@ The disc's details are returned in a reference to a fairly complex
 hash.  It includes information normally stored in comments.  The most
 common entries in this hash include:
 
-	$disc_details = get_disc_details( $disc_genre, $cddbp_id );
+  $disc_details = get_disc_details( $disc_genre, $cddbp_id );
 
 $disc_details->{"disc length"}
 
@@ -1416,18 +1416,18 @@ Returns what CDDB.pm thinks your e-mail address is, or what it was
 last set to.  It was added to fetch the default e-mail address so
 users can see it and have an opportunity to correct it.
 
-	my $mail_from = $cddb->get_mail_address();
-	print "New e-mail address (or blank to keep <$mail_from>): ";
-	my $new_mail_from = <STDIN>;
-	$new_mail_from =~ s/^\s+//;
-	$new_mail_from =~ s/\s+$//;
-	$new_mail_from =~ s/\s+/ /g;
-	$mail_from = $new_mail_from if length $new_mail_from;
+  my $mail_from = $cddb->get_mail_address();
+  print "New e-mail address (or blank to keep <$mail_from>): ";
+  my $new_mail_from = <STDIN>;
+  $new_mail_from =~ s/^\s+//;
+  $new_mail_from =~ s/\s+$//;
+  $new_mail_from =~ s/\s+/ /g;
+  $mail_from = $new_mail_from if length $new_mail_from;
 
-	$cddbp->submit_disc(
-		...,
-		From => $mail_from,
-	);
+  $cddbp->submit_disc(
+    ...,
+    From => $mail_from,
+  );
 
 =item get_mail_host
 
@@ -1435,18 +1435,18 @@ Returns what CDDB.pm thinks your SMTP host is, or what it was last set
 to.  It was added to fetch the default e-mail transfer host so users
 can see it and have an opportunity to correct it.
 
-	my $mail_host = $cddb->get_mail_host();
-	print "New e-mail host (or blank to keep <$mail_host>): ";
-	my $new_mail_host = <STDIN>;
-	$new_mail_host =~ s/^\s+//;
-	$new_mail_host =~ s/\s+$//;
-	$new_mail_host =~ s/\s+/ /g;
-	$mail_host = $new_mail_host if length $new_mail_host;
+  my $mail_host = $cddb->get_mail_host();
+  print "New e-mail host (or blank to keep <$mail_host>): ";
+  my $new_mail_host = <STDIN>;
+  $new_mail_host =~ s/^\s+//;
+  $new_mail_host =~ s/\s+$//;
+  $new_mail_host =~ s/\s+/ /g;
+  $mail_host = $new_mail_host if length $new_mail_host;
 
-	$cddbp->submit_disc(
-		...,
-		Host => $mail_host,
-	);
+  $cddbp->submit_disc(
+    ...,
+    Host => $mail_host,
+  );
 
 =item parse_cdinfo CDINFO_FILE
 
@@ -1454,8 +1454,8 @@ Generates a table of contents suitable for calculate_id() based on the
 output of a program called "cdinfo".  CDINFO_FILE may either be a text
 file, or it may be the cdinfo program itself.
 
-	my @toc = parse_cdinfo("cdinfo.txt"); # read cdinfo.txt
-	my @toc = parse_cdinfo("cdinfo|");    # run cdinfo directly
+  my @toc = parse_cdinfo("cdinfo.txt"); # read cdinfo.txt
+  my @toc = parse_cdinfo("cdinfo|");    # run cdinfo directly
 
 The table of contents can be passed directly to calculate_id().
 

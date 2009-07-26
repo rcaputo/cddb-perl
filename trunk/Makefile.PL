@@ -12,6 +12,9 @@ WriteMakefile(
 	ABSTRACT     => 'High-level interface to CDDB and freedb servers.',
 	LICENSE      => 'perl',
 	VERSION_FROM => 'lib/CDDB.pm',
+	PREREQ_PM    => {
+		'Test::More' => 0,
+	},
 	dist         => {
 		COMPRESS   => 'gzip -9',
 		SUFFIX     => 'gz',

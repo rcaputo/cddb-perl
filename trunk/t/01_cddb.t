@@ -8,10 +8,10 @@
 
 use strict;
 use CDDB;
+use Test::More tests => 25;
 
 BEGIN {
 	select(STDOUT); $|=1;
-	print "1..34\n";
 };
 
 my ($i, $result);
@@ -25,34 +25,18 @@ my $cddb = new CDDB(
 	Debug          => 0,
 );
 
-defined($cddb) || print 'not '; print "ok 1\n";
+ok(defined($cddb), "cddb object built okay");
 
 ### test genres
 
-my @test_genres = qw(
+my @test_genres = sort qw(
 	blues classical country data folk jazz misc newage reggae rock
 	soundtrack
 );
-my @cddb_genres = $cddb->get_genres();
 
-if (@cddb_genres) {
-	print "ok 2\n";
-	if (@cddb_genres == @test_genres) {
-		print "ok 3\n";
-		@test_genres = sort @test_genres;
-		@cddb_genres = sort @cddb_genres;
-		$result = 'ok';
-		while (my $test = shift(@test_genres)) {
-			$result = 'not ok' if ($test ne shift(@cddb_genres));
-		}
-		print "$result 4\n";
-	}
-}
-else {
-	print "not ok 2\n";
-	print "not ok 3\n";
-	print "not ok 4\n";
-}
+my @cddb_genres = sort $cddb->get_genres();
+
+is_deeply(\@cddb_genres, \@test_genres, "got expected genres");
 
 ### helper sub: replace != tests with "not off by 5%"
 
@@ -81,8 +65,8 @@ sub not_near {
 # Sample TOC information:
 
 my @toc = (
-	"1   0  1  71",  # track  1 starts at 00:01 and 71 frames
-	"999 5 42   4",  # leadout  starts at 05:42 and  4 frames
+	"1   0  3  71",  # track  1 starts at 00:03 and 71 frames
+	"999 5 44   4",  # leadout  starts at 05:44 and  4 frames
 );
 
 ### calculate CDDB ID
@@ -90,51 +74,16 @@ my @toc = (
 my ($id, $track_numbers, $track_lengths, $track_offsets, $total_seconds) =
 	$cddb->calculate_id(@toc);
 
-($id ne '03015501') && print 'not '; print "ok 5\n";
-&not_near($total_seconds, 344) && print 'not '; print "ok 6\n";
+is($id, '03015501', 'calculated expected id');
+is($total_seconds, 344, 'total time matches');
 
 my @test_numbers = qw(001);
 my @test_lengths = qw(05:41);
 my @test_offsets = qw(296);
 
-if (@$track_numbers == @test_numbers) {
-	print "ok 7\n";
-	$i = 0; $result = 'ok';
-	foreach my $number (@test_numbers) {
-		$result = 'not ok' if ($number ne $track_numbers->[$i++]);
-	}
-	print "$result 8\n";
-}
-else {
-	print "not ok 7\n";
-	print "not ok 8\n";
-}
-
-if (@$track_lengths == @test_lengths) {
-	print "ok 9\n";
-	$i = 0; $result = 'ok';
-	foreach my $length (@test_lengths) {
-		$result = 'not ok' if ($length ne $track_lengths->[$i++]);
-	}
-	print "$result 10\n";
-}
-else {
-	print "not ok 9\n";
-	print "not ok 10\n";
-}
-
-if (@$track_offsets == @test_offsets) {
-	print "ok 11\n";
-	$i = 0; $result = 'ok';
-	foreach my $offset (@test_offsets) {
-		$result = 'not ok' if (&not_near($offset, $track_offsets->[$i++]));
-	}
-	print "$result 12\n";
-}
-else {
-	print "not ok 11\n";
-	print "not ok 12\n";
-}
+is_deeply($track_numbers, \@test_numbers, 'got expected track numbers');
+is_deeply($track_lengths, \@test_lengths, 'got expected track lengths');
+is_deeply($track_offsets, \@test_offsets, 'got expected track offsets');
 
 ### test looking up discs (one match)
 
@@ -142,33 +91,22 @@ my @discs = $cddb->get_discs($id, $track_offsets, $total_seconds);
 my $disc_count = @discs;
 
 my ($genre, $disc_id, $title) = @{$discs[0]};
-($disc_count == 2) || print 'not '; print "ok 13 # $disc_count\n";
+is($disc_count, 2, 'got expected disc count');
 
-print "not " unless grep { $_->[0] eq "misc" } @discs;
-print "ok 14\n";
+ok(scalar(grep { $_->[0] eq 'misc' } @discs), 'got expected disc genre');
 
-($discs[0][1] eq '03015501')  || print 'not '; print "ok 15 # $discs[0][1]\n";
+ok(scalar(grep { $_->[1] eq '03015501' } @discs), 'retrieved disc is expected id');
 
-print 'not ' unless $discs[0][2] =~ /freedb.*test/i;
-print "ok 16 # $discs[0][2]\n";
+#is($discs[0][1], '03015501', 'retrieved disc is expected id');
+
+like($discs[0][2], qr/freedb.*test/i, 'retrieved disc has expected title');
 
 ### test macro lookup
 
 $cddb->disconnect();
 my @other_discs = $cddb->get_discs_by_toc(@toc);
 
-if (@other_discs) {
-	my $other_count = @other_discs;
-	($other_count == 2) || print 'not '; print "ok 17 # $other_count\n";
-	($other_discs[0]->[0] eq $discs[0]->[0]) || print 'not '; print "ok 18\n";
-	($other_discs[0]->[1] eq $discs[0]->[1]) || print 'not '; print "ok 19\n";
-	($other_discs[0]->[2] eq $discs[0]->[2]) || print 'not '; print "ok 20\n";
-}
-else {
-	for (17..20) {
-		print "not ok $_ # no result\n";
-	}
-}
+is_deeply($other_discs[0], $discs[0], 'disc by toc matches disc by id');
 
 ### test gathering disc details
 
@@ -186,27 +124,10 @@ my $disc_info = $cddb->get_disc_details($genre, $disc_id);
 #   }
 # }
 
-($disc_info->{'disc length'} eq '344 seconds') || print 'not ';
-print "ok 21 # $disc_info->{'disc length'}\n";
-
-($disc_info->{'discid'} eq $disc_id) || print 'not ';
-print "ok 22\n";
-
-($disc_info->{'dtitle'} eq $title) || print 'not ';
-print "ok 23\n";
-
-if (@{$disc_info->{'offsets'}} == @$track_offsets) {
-	print "ok 24\n";
-	$i = 0; $result = 'ok';
-	foreach my $offset (@{$disc_info->{'offsets'}}) {
-		$result = 'not ok' if &not_near($offset, $track_offsets->[$i++]);
-	}
-	print "$result 25\n";
-}
-else {
-	print "not ok 24\n";
-	print "not ok 25\n";
-}
+is($disc_info->{'disc length'}, '344 seconds', 'disc is expected length');
+is($disc_info->{'discid'}, $disc_id, 'disc id matches expectation');
+is($disc_info->{'dtitle'}, $title, 'disc title matches expectation');
+is_deeply($disc_info->{'offsets'}, $track_offsets, 'disc offsets match');
 
 my @test_titles = ( "01-test" );
 
@@ -219,8 +140,7 @@ foreach my $detail_title (@{$disc_info->{'ttitles'}}) {
 	$ok_tracks++;
 }
 
-print "not " unless $ok_tracks >= @test_titles / 2;
-print "ok 26 # $ok_tracks >= ", (@test_titles / 2), " ?\n";
+ok($ok_tracks >= @test_titles / 2, 'enough track titles match expectation');
 
 ### test fuzzy matches ("the freeside tests")
 
@@ -232,12 +152,12 @@ my @fuzzy_offsets = qw(
 );
 
 @discs = $cddb->get_discs($id, \@fuzzy_offsets, $total_seconds);
-@discs || print 'not '; print "ok 27\n";
+ok(scalar(@discs), 'retrieved at least one disc');
 
 ($genre, $disc_id, $title) = @{$discs[0]};
-(length $genre)         || print 'not '; print "ok 28\n";
-(length($disc_id) == 8) || print 'not '; print "ok 29\n";
-(length $title)         || print 'not '; print "ok 30\n";
+ok((length $genre), 'retrieved disc has a genre');
+ok((length($disc_id) == 8), 'retrieved disc id is proper length');
+ok((length $title), 'retrieved disc has a title');
 
 $id = 'c509b810';
 $total_seconds = 2488;
@@ -247,17 +167,20 @@ $total_seconds = 2488;
 );
 
 @discs = $cddb->get_discs($id, \@fuzzy_offsets, $total_seconds);
-
-if (@discs > 1) {
-	print "ok 31\n";
-}
-else {
-	print "not ok 31\n";
-}
+ok(@discs > 1, 'retrieved discs from fuzzy offset');
 
 ### test CDDB submission
+# <bekj> dngor It's not Polite to have tests fail when things are OK,
+# Makes CPAN choke :(
 
-if ($cddb->can_submit_disc()) {
+SKIP: {
+	unless ($cddb->can_submit_disc()) {
+		skip(
+			"Mail::Internet; Mail::Header; and MIME::QuotedPrint needed to submit",
+			1
+		);
+	}
+
 	eval {
 		$cddb->submit_disc(
 			Genre       => 'classical',
@@ -272,25 +195,15 @@ if ($cddb->can_submit_disc()) {
 			# odd revision for testing
 			Revision    => 123,
 		);
-		print "ok 32\n";
+
+		pass("submitted a test disc; check your e-mail for confirmation");
 	};
 
 	# skip if SMTPHOSTS and default are bad
-	if ($@ ne '') {
-		print "ok 32 # Skip - $@\n";
+	if ($@) {
+		skip($@, 1);
 	}
-}
-
-# <bekj> dngor It's not Polite to have tests fail when things are OK,
-# Makes CPAN choke :(
-
-																				# skip when needed modules are missing
-else {
-	print(
-		"ok 32 # Skip - Mail::Internet; Mail::Header; and MIME::QuotedPrint ",
-		"are needed to submit discs\n"
-	);
-}
+};
 
 ### Test fetch-by-query.
 
@@ -300,16 +213,8 @@ my $query = (
 );
 
 @discs = $cddb->get_discs_by_query($query);
-if (@discs) {
-	print "not " unless $discs[0][0] eq 'rock';
-	print "ok 33\n";
-	print "not " unless $discs[0][1] eq 'd30ffd0e';
-	print "ok 34\n";
-}
-else {
-	print "not ok 33\n";
-	print "not ok 34\n";
-}
+is($discs[0][0], 'rock', 'fetch-by-query retrieved expected genre');
+is($discs[0][1], 'd30ffd0e', 'fetch-by-query retrieved expected id');
 
 __END__
 
