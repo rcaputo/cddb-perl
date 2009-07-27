@@ -15,6 +15,12 @@ WriteMakefile(
 	PREREQ_PM    => {
 		'Test::More' => 0,
 	},
+	META_ADD     => {
+		resources  => {
+			license    => 'http://dev.perl.org/licenses/',
+			repository => 'http://thirdlobe.com/svn/cddb/trunk'
+		},
+	},
 	dist         => {
 		COMPRESS   => 'gzip -9',
 		SUFFIX     => 'gz',

@@ -1546,14 +1546,21 @@ Documented as being not documented.
 Please see the cddb.t program in the t (tests) directory.  It
 exercises every aspect of CDDB.pm, including submissions.
 
-=head1 BUGS
+=head1 BUG TRACKER
 
-There are no known bugs, but see the README for things that need to be
-done.
+https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=CDDB
+
+=head1 REPOSITORY
+
+http://thirdlobe.com/svn/cddb/
+
+=head1 OTHER RESOURCES
+
+http://search.cpan.org/dist/CDDB/
 
 =head1 CONTACT AND COPYRIGHT
 
-Copyright 1998-2005 Rocco Caputo.  All rights reserved.  This program
+Copyright 1998-2009 Rocco Caputo.  All rights reserved.  This program
 is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself.
 
