@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.20';
+$VERSION = '1.21';
 
 BEGIN {
 	if ($^O eq 'MSWin32') {
@@ -1546,15 +1546,17 @@ Documented as being not documented.
 Please see the cddb.t program in the t (tests) directory.  It
 exercises every aspect of CDDB.pm, including submissions.
 
-=head1 BUG TRACKER
+=head1 LINKS
+
+=head2 BUG TRACKER
 
 https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=CDDB
 
-=head1 REPOSITORY
+=head2 REPOSITORY
 
 http://thirdlobe.com/svn/cddb/
 
-=head1 OTHER RESOURCES
+=head2 OTHER RESOURCES
 
 http://search.cpan.org/dist/CDDB/
 
@@ -1563,8 +1565,6 @@ http://search.cpan.org/dist/CDDB/
 Copyright 1998-2009 Rocco Caputo.  All rights reserved.  This program
 is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself.
-
-Rocco may be contacted at rcaputo@cpan.org.
 
 =cut
 
