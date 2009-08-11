@@ -6,3 +6,4 @@ Makefile.PL
 README
 lib/CDDB.pm
 t/01_cddb.t
+eg/osx-lookup.pl
