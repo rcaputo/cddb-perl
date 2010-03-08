@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# $Id$
 
 use ExtUtils::MakeMaker;
 
@@ -18,14 +17,14 @@ WriteMakefile(
 	META_ADD     => {
 		resources  => {
 			license    => 'http://dev.perl.org/licenses/',
-			repository => 'http://thirdlobe.com/svn/cddb/trunk'
+			repository => 'http://github.com/rcaputo/cddb-perl'
 		},
 	},
 	dist         => {
 		COMPRESS   => 'gzip -9',
 		SUFFIX     => 'gz',
 		PREOP      => (
-			'svn-log.perl | tee ./$(DISTNAME)-$(VERSION)/CHANGES > ./CHANGES'
+			'git-log.pl | tee ./$(DISTNAME)-$(VERSION)/CHANGES > ./CHANGES'
 		),
 	},
 );

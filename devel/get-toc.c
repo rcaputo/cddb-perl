@@ -1,4 +1,3 @@
-/* $Id$ */
 #define INCL_DOSDEVICES
 #define INCL_DOSDEVIOCTL
 #include <os2.h>

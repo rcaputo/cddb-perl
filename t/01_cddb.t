@@ -1,8 +1,7 @@
 #!perl -w
-# $Id$
 # vim: filetype=perl
 # 
-# Copyright 1998-2005 Rocco Caputo <troc@netrus.net>.  All rights
+# Copyright 1998-2020 Rocco Caputo <rcaputo@cpan.org>.  All rights
 # reserved.  This program is free software; you can redistribute it
 # and/or modify it under the same terms as Perl itself.
 

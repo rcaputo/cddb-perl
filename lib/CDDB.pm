@@ -1,4 +1,3 @@
-# $Id$
 # Documentation and Copyright exist after __END__
 
 package CDDB;
@@ -8,7 +7,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.21';
+$VERSION = '1.220';
 
 BEGIN {
 	if ($^O eq 'MSWin32') {
