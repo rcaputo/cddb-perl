@@ -1553,7 +1553,8 @@ https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=CDDB
 
 =head2 REPOSITORY
 
-http://thirdlobe.com/svn/cddb/
+http://github.com/rcaputo/cddb-perl
+http://gitorious.org/cddb-freedb-perl
 
 =head2 OTHER RESOURCES
 
@@ -1561,7 +1562,7 @@ http://search.cpan.org/dist/CDDB/
 
 =head1 CONTACT AND COPYRIGHT
 
-Copyright 1998-2009 Rocco Caputo.  All rights reserved.  This program
+Copyright 1998-2010 Rocco Caputo.  All rights reserved.  This program
 is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself.
 
