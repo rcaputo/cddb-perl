@@ -27,6 +27,8 @@ use Sys::Hostname;
 # TODO: Fetch the list from freedb.freedb.org, which is a round-robin
 # for all the others anyway.
 
+my $cddbp_host_selector = 0;
+
 my @cddbp_hosts = (
 	[ 'localhost'         => 8880 ],
 	[ 'freedb.freedb.org' => 8880 ],
@@ -342,31 +344,15 @@ sub connect {
 
 	HANDSHAKE: while ('true') {
 
-		# The host loop tries each possible host, in order.
+		# Loop through the CDDB protocol hosts list up to twice in order
+		# to find a server that will respond.  This implements a 2x retry.
 
-		HOST: while ('true') {
+		HOST: for (1..(@cddbp_hosts * 2)) {
 
 			# Hard disconnect here to prevent recursion.
 			delete $self->{handle};
 
-			# If no host has been selected, cycle to the next one in the
-			# list.  This destroys that list as it goes, but a successful
-			# connection later will restore the good host to the list.
-			# TODO: give bad hosts extra chances in case there are transient
-			# network problems.
-			if ($self->{host} eq '') {
-
-				# None of the servers worked.  Time to leave.
-				unless (@cddbp_hosts) {
-					$self->debug_print( 0, "--- all cddbp servers failed to answer" );
-					warn "No cddb protocol servers answer.  Is your network OK?\n"
-						unless $self->{debug};
-					return;
-				}
-
-				$cddbp_host = shift(@cddbp_hosts);
-				($self->{host}, $self->{port}) = @$cddbp_host;
-			}
+			($self->{host}, $self->{port}) = @{$cddbp_hosts[$cddbp_host_selector]};
 
 			# Assign the host we selected, and attempt a connection.
 			$self->debug_print(
@@ -387,8 +373,13 @@ sub connect {
 					0,
 					"--- error connecting to $self->{host} port $self->{port}: $!"
 				);
+
 				delete $self->{handle};
 				$self->{host} = $self->{port} = '';
+
+				# Try the next host in the list.  Wrap if necessary.
+				$cddbp_host_selector = 0 if ++$cddbp_host_selector > @cddbp_hosts;
+
 				next HOST;
 			}
 
@@ -399,12 +390,17 @@ sub connect {
 				0,
 				"+++ successfully connected to $self->{host} port $self->{port}"
 			);
-			push(@cddbp_hosts, $cddbp_host);
+
 			last HOST;
 		}
 
-		# This should not occur.
-		die unless defined $self->{handle};
+		# Tried the whole list twice without success?  Time to give up.
+		unless (defined $self->{handle}) {
+			$self->debug_print( 0, "--- all cddbp servers failed to answer" );
+			warn "No cddb protocol servers answer.  Is your network OK?\n"
+				unless $self->{debug};
+			return;
+		}
 
 		# Turn off buffering on the socket handle.
 		select((select($self->{handle}), $|=1)[0]);
