@@ -1011,8 +1011,8 @@ sub submit_disc {
 	return;
 }
 
-###############################################################################
 1;
+
 __END__
 
 =head1 NAME
@@ -1098,6 +1098,12 @@ offsets).
 Disc details have been useful for generating CD catalogs, naming mp3
 files, printing CD liners, or even just playing discs in an automated
 jukebox.
+
+Despite the module's name, it connects to FreeDB servers by default.
+This began at version 1.04, when cddb.com changed its licensing model
+to support end-user applications, not third-party libraries.
+Connections to cddb.com may still work, and patches are welcome to
+maintain that functionality, but it's no longer officially supported.
 
 =head1 PUBLIC METHODS
 
@@ -1545,6 +1551,42 @@ Documented as being not documented.
 Please see the cddb.t program in the t (tests) directory.  It
 exercises every aspect of CDDB.pm, including submissions.
 
+=head1 COMPATIBILITY
+
+CDDB.pm uses standard Perl modules.  It has been tested at one point
+or another on OS/2, MacOS and FreeBSD systems, as well as the systems
+listed at:
+
+  http://testers.cpan.org/search?request=dist&dist=CDDB
+
+If you want to submit disc information to the CDDB, you will need to
+install two other modules:
+
+  Mail::Internet will allow CDDB.pm to send email submissions, and it
+  automagically includes Mail::Header.
+
+  MIME::QuotedPrint will allow CDDB.pm to send non-ASCII text
+  unscathed.  Currently only ISO-8859-1 and ASCII are supported.
+
+All other features will work without these modules.
+
+=head1 KNOWN TEST FAILURES
+
+The last test in the "make test" suite will try to send a sample
+submission to the CDDB if MailTools is present.  It expects to find an
+SMTP host in the SMTPHOST environment variable.  It will fall back to
+"mail" if SMTPHOST doesn't exist.  If neither works, the test will be
+skipped.  To see why it's skipped:
+
+  make test TEST_VERBOSE=1
+
+Some of the tests (most notably numbers 25, 27 and 29) compare data
+returned by a cddbp server against a stored copy of a previous query.
+These tests fail occasionally since the database is constantly in
+flux.  Starting with version 1.00, the test program uses fuzzy
+comparisons that should fail less.  Version 1.04 saw even fuzzier
+comparisons.  Please report any problems so they can be fixed.
+
 =head1 LINKS
 
 =head2 BUG TRACKER
@@ -1562,7 +1604,7 @@ http://search.cpan.org/dist/CDDB/
 
 =head1 CONTACT AND COPYRIGHT
 
-Copyright 1998-2010 Rocco Caputo.  All rights reserved.  This program
+Copyright 1998-2013 Rocco Caputo.  All rights reserved.  This program
 is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself.
 
