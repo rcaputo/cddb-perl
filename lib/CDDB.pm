@@ -4,10 +4,7 @@ package CDDB;
 require 5.001;
 
 use strict;
-use vars qw($VERSION);
 use Carp;
-
-$VERSION = '1.220';
 
 BEGIN {
 	if ($^O eq 'MSWin32') {
@@ -254,7 +251,7 @@ sub new {
 
 	# Change the cddbp client version.
 	my $client_version = $param{Client_Version};
-	$client_version = $VERSION unless defined $client_version;
+	$client_version = $CDDB::VERSION unless defined $client_version;
 
 	# Whether to use utf-8 for submission
 	my $utf8 = $param{Utf8};
